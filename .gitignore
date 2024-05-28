@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*~
+*.bak
+*.swp
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# PyInstaller
+*.spec
+
+# Project specific
+.env
+.env.*
+
+#Driver
+geckodriver*
+
+
+*.csv
+scrape.py
