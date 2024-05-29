@@ -21,6 +21,6 @@ dist/
 geckodriver*
 
 
-*.csv
+
 scrape.py
 test*
