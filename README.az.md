@@ -25,10 +25,12 @@ pip install turbo2csv
 ## İstifadə
 
 ```python
-from turbo2csv import TurboScraper
+from turbo2csv.scraper import TurboScraper
 
-scraper = TurboScraper()
-scraper.scrape(output_file='turbo.csv')
+scraper = TurboScraper(geckodriver_path='path/to/geckodriver', headless=True)
+
+scraper.scrape(output_file='turbo.csv', start=1)
+
 ```
 
 ## Sınaq

@@ -7,61 +7,66 @@ import os
 
 class TurboScraper:
     def __init__(self, geckodriver_path=None, headless=False):
-        # Get the current directory of the script
         current_directory = os.path.dirname(os.path.realpath(__file__))
-        # Specify the path to geckodriver
         self.geckodriver_path = geckodriver_path or os.path.join(current_directory, 'geckodriver')
-        # Specify Firefox options
         self.firefox_options = webdriver.FirefoxOptions()
         if headless:
-            self.firefox_options.add_argument('--headless')  # Run Firefox in headless mode
+            self.firefox_options.add_argument('--headless')
 
-    def scrape(self, output_file='turbo.csv'):
-        # Initialize Firefox driver with specified geckodriver path and options
+    def scrape(self, output_file='turbo.csv', start=1):
         driver = webdriver.Firefox(executable_path=self.geckodriver_path, options=self.firefox_options)
+        page_url = 'https://turbo.az/autos'
+        driver.get(page_url)
+        
+        # Finding the last page number
+        last_page_element = driver.find_element(By.CSS_SELECTOR, '.last a')
+        last_page_url = last_page_element.get_attribute('href')
+        last_page_number = int(last_page_url.split('=')[-1])
+        
+        # Displaying the range of pages to be scraped
+        print(f"Starting the scraping process from page {start} to page {last_page_number}")
+        
+        unique_entries = set()
 
-        page = 1
-        while True:
-            with open(output_file, 'a') as turbo_csv:  # Append mode to avoid overwriting existing data
-                csv_writer = writer(turbo_csv)
+        for page in range(start, last_page_number + 1):
+            page_url = f'https://turbo.az/autos?page={page}'
+            driver.get(page_url)
+            sleep(2)  # Adding a slight delay to ensure the page loads completely
+            
+            # Logging the current page being processed
+            print(f"Scraping page {page}/{last_page_number}...")
 
-                # If it's the first page, write header row
-                if page == 1:
-                    csv_writer.writerow(['Name', 'Price', 'Year', 'Engine', 'Distance', 'City'])
+            cars = driver.find_elements(By.CLASS_NAME, 'products-i__bottom')
+            for car in cars:
+                try:
+                    name = car.find_element(By.CLASS_NAME, 'products-i__name').text
+                    price = car.find_element(By.CLASS_NAME, 'product-price').text
+                    year, engine, distance = car.find_element(By.CLASS_NAME, 'products-i__attributes').text.split(', ')
+                    city = car.find_element(By.CLASS_NAME, 'products-i__datetime').text.split(',')[0]
+                    entry = (name, price, year, engine, distance, city)
+                    
+                    # Logging each entry found
+                    print(f"Found entry: {entry}")
+                    
+                    if entry not in unique_entries:
+                        unique_entries.add(entry)
+                except NoSuchElementException:
+                    # Logging an error if an element is not found
+                    print(f"Error processing car entry on page {page}")
+                    pass
+            
+            # Logging completion of page scraping
+            print(f"Completed scraping page {page}")
 
-                # Get the page URL
-                page_url = f'https://turbo.az/autos?page={page}'
-                driver.get(page_url)
+        # Writing to CSV file
+        with open(output_file, 'w', newline='') as turbo_csv:
+            csv_writer = writer(turbo_csv)
+            csv_writer.writerow(['Name', 'Price', 'Year', 'Engine', 'Distance', 'City'])
+            for entry in unique_entries:
+                csv_writer.writerow(entry)
 
-                # Find all car elements on the page
-                cars = driver.find_elements(By.CLASS_NAME, 'products-i__bottom')
-
-                for car in cars:
-                    try:
-                        # Extract car details
-                        name = car.find_element(By.CLASS_NAME, 'products-i__name').text
-                        price = car.find_element(By.CLASS_NAME, 'product-price').text
-                        year, engine, distance = car.find_element(By.CLASS_NAME, 'products-i__attributes').text.split(', ')
-                        city = car.find_element(By.CLASS_NAME, 'products-i__datetime').text.split(',')[0]
-                        print([name, price, year, engine, distance, city])
-                        csv_writer.writerow([name, price, year, engine, distance, city])
-                    except NoSuchElementException:
-                        pass
-
-            # Increment page number
-            page += 1
-
-            # Check if there's a next page
-            try:
-                driver.find_element(By.XPATH, "//a[text()='Next »']").click()
-            except NoSuchElementException:
-                break
-
-            # Sleep to avoid overwhelming the server
-            sleep(1)
-
+        # Logging the completion of the scraping process
+        print(f"Scraping completed. Total unique entries found: {len(unique_entries)}")
+        print(f"Data saved to {output_file}")
+        
         driver.quit()
-
-# Example usage:
-# scraper = TurboScraper()
-# scraper.scrape(output_file='turbo.csv')

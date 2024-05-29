@@ -29,10 +29,12 @@ pip install turbo2csv
 Usage
 ----------
 ```py
-from turbo2csv import   
+from turbo2csv.scraper import TurboScraper
 
-scraper = TurboScraper()
-scraper.scrape(output_file='turbo.csv')
+scraper = TurboScraper(geckodriver_path='path/to/geckodriver', headless=True)
+
+scraper.scrape(output_file='turbo.csv', start=1)
+
 
 ```
 
