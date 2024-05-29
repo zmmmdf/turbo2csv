@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='turbo2csv',
-    version='1.1.0',
+    version='1.2.0',
     description='This is a Python web scraper built to extract car information from Turbo.az, one of the most popular car purchase websites in Azerbaijan.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
